@@ -19,6 +19,13 @@ document.addEventListener('DOMContentLoaded', function() {
         initSecondLoadMore();
         initDynamicOpeningHours();
         initGoogleReviews();
+        initBannerModal();
+        
+        // Show banner modal right after initialization
+        setTimeout(() => {
+            showBannerModal();
+            modalAutoShown = true;
+        }, 500);
     }, 1500);
 });
 
@@ -1668,3 +1675,358 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+// ========================================
+// BANNER IMAGE MODAL FUNCTIONALITY
+// ========================================
+
+// Banner images array
+const bannerImages = [
+    'banner/banner2.jpeg',
+    'banner/WhatsApp Image 2025-12-03 at 23.14.51.jpeg'
+];
+
+let currentImageIndex = 0;
+let modalAutoShown = false;
+
+// Initialize Banner Modal
+function initBannerModal() {
+    // Show notification after page loads
+    setTimeout(() => {
+        showBannerNotification();
+    }, 2000);
+    
+    // Auto-show modal immediately after loading screen
+    setTimeout(() => {
+        showBannerModal();
+        modalAutoShown = true;
+    }, 3000);
+    
+    // Add keyboard navigation
+    document.addEventListener('keydown', handleKeyboardNavigation);
+    
+    // Preload images for smooth transitions
+    preloadBannerImages();
+    
+    // Initialize persistent button (hidden initially)
+    const persistentBtn = document.getElementById('persistentBannerBtn');
+    if (persistentBtn) {
+        persistentBtn.classList.remove('show');
+    }
+    
+    console.log('Banner modal initialized with images:', bannerImages);
+}
+
+// Show banner notification
+function showBannerNotification() {
+    // Remove any existing notification
+    const existingNotification = document.querySelector('.banner-notification');
+    if (existingNotification) {
+        existingNotification.remove();
+    }
+    
+    const notification = document.createElement('div');
+    notification.className = 'banner-notification';
+    notification.innerHTML = `
+        <i class="fas fa-images"></i>
+        Click to view our special banners!
+    `;
+    
+    // Add click handler to show modal
+    notification.addEventListener('click', () => {
+        showBannerModal();
+        notification.classList.remove('show');
+        setTimeout(() => notification.remove(), 300);
+    });
+    
+    document.body.appendChild(notification);
+    
+    // Show notification with animation
+    setTimeout(() => {
+        notification.classList.add('show');
+    }, 100);
+    
+    // Auto-hide notification after 5 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                    // Show persistent button if modal hasn't been shown yet
+                    showPersistentButtonIfNeeded();
+                }
+            }, 300);
+        }
+    }, 5000);
+}
+
+// Show banner modal
+function showBannerModal() {
+    const modal = document.getElementById('bannerModal');
+    const modalImage = document.getElementById('modalImage');
+    const imageCounter = document.getElementById('imageCounter');
+    const persistentBtn = document.getElementById('persistentBannerBtn');
+    
+    if (!modal || !modalImage) {
+        console.error('Banner modal elements not found');
+        return;
+    }
+    
+    // Hide persistent button when modal opens
+    if (persistentBtn) {
+        persistentBtn.classList.remove('show');
+    }
+    
+    // Set initial image
+    currentImageIndex = 0;
+    modalImage.src = bannerImages[currentImageIndex];
+    updateImageCounter();
+    
+    // Show modal
+    modal.classList.add('show');
+    document.body.style.overflow = 'hidden'; // Prevent background scrolling
+    
+    console.log('Banner modal shown with image:', bannerImages[currentImageIndex]);
+}
+
+// Close banner modal
+function closeBannerModal() {
+    const modal = document.getElementById('bannerModal');
+    const persistentBtn = document.getElementById('persistentBannerBtn');
+    
+    if (modal) {
+        modal.classList.remove('show');
+        document.body.style.overflow = ''; // Restore scrolling
+        console.log('Banner modal closed');
+        
+        // Show persistent button after modal closes
+        setTimeout(() => {
+            if (persistentBtn) {
+                persistentBtn.classList.add('show');
+            }
+        }, 300);
+    }
+}
+
+// Navigate to previous image
+function previousImage() {
+    if (bannerImages.length <= 1) return;
+    
+    currentImageIndex = (currentImageIndex - 1 + bannerImages.length) % bannerImages.length;
+    updateModalImage();
+    console.log('Previous image:', bannerImages[currentImageIndex]);
+}
+
+// Navigate to next image
+function nextImage() {
+    if (bannerImages.length <= 1) return;
+    
+    currentImageIndex = (currentImageIndex + 1) % bannerImages.length;
+    updateModalImage();
+    console.log('Next image:', bannerImages[currentImageIndex]);
+}
+
+// Update modal image with fade transition
+function updateModalImage() {
+    const modalImage = document.getElementById('modalImage');
+    
+    if (!modalImage) return;
+    
+    // Add fade out effect
+    modalImage.classList.add('fade-transition');
+    
+    setTimeout(() => {
+        modalImage.src = bannerImages[currentImageIndex];
+        updateImageCounter();
+        
+        // Remove fade effect and add fade in
+        modalImage.classList.remove('fade-transition');
+        modalImage.classList.add('fade-in');
+        
+        setTimeout(() => {
+            modalImage.classList.remove('fade-in');
+        }, 300);
+    }, 150);
+}
+
+// Update image counter
+function updateImageCounter() {
+    const imageCounter = document.getElementById('imageCounter');
+    
+    if (imageCounter) {
+        imageCounter.textContent = `${currentImageIndex + 1} / ${bannerImages.length}`;
+    }
+}
+
+// Handle keyboard navigation
+function handleKeyboardNavigation(event) {
+    const modal = document.getElementById('bannerModal');
+    
+    // Only handle keys when modal is open
+    if (!modal || !modal.classList.contains('show')) {
+        return;
+    }
+    
+    switch (event.key) {
+        case 'Escape':
+            closeBannerModal();
+            break;
+        case 'ArrowLeft':
+            event.preventDefault();
+            previousImage();
+            break;
+        case 'ArrowRight':
+            event.preventDefault();
+            nextImage();
+            break;
+        case ' ': // Spacebar
+            event.preventDefault();
+            nextImage();
+            break;
+    }
+}
+
+// Preload banner images for smooth transitions
+function preloadBannerImages() {
+    bannerImages.forEach(imageSrc => {
+        const img = new Image();
+        img.src = imageSrc;
+        img.onload = () => {
+            console.log('Preloaded banner image:', imageSrc);
+        };
+        img.onerror = () => {
+            console.error('Failed to preload banner image:', imageSrc);
+        };
+    });
+}
+
+// Touch/swipe support for mobile devices
+let touchStartX = 0;
+let touchEndX = 0;
+
+function handleTouchStart(event) {
+    touchStartX = event.changedTouches[0].screenX;
+}
+
+function handleTouchEnd(event) {
+    touchEndX = event.changedTouches[0].screenX;
+    handleSwipe();
+}
+
+function handleSwipe() {
+    const swipeThreshold = 50; // Minimum distance for a swipe
+    const swipeDistance = touchEndX - touchStartX;
+    
+    if (Math.abs(swipeDistance) > swipeThreshold) {
+        if (swipeDistance > 0) {
+            // Swipe right - previous image
+            previousImage();
+        } else {
+            // Swipe left - next image
+            nextImage();
+        }
+    }
+}
+
+// Add touch event listeners to modal
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('bannerModal');
+    if (modal) {
+        modal.addEventListener('touchstart', handleTouchStart, { passive: true });
+        modal.addEventListener('touchend', handleTouchEnd, { passive: true });
+    }
+});
+
+// Auto-refresh modal every time page is loaded or refreshed
+window.addEventListener('load', function() {
+    // Reset modal state
+    modalAutoShown = false;
+    currentImageIndex = 0;
+    
+    // Show modal immediately on every page load/refresh
+    setTimeout(() => {
+        showBannerModal();
+        modalAutoShown = true;
+    }, 2500);
+    
+    // Also show notification
+    setTimeout(() => {
+        showBannerNotification();
+    }, 1500);
+});
+
+// Additional triggers for modal auto-show
+document.addEventListener('DOMContentLoaded', function() {
+    // Ensure modal shows on DOM ready
+    setTimeout(() => {
+        if (!modalAutoShown) {
+            showBannerModal();
+            modalAutoShown = true;
+        }
+    }, 3500);
+});
+
+// Also trigger on page visibility change (when user comes back to tab)
+document.addEventListener('visibilitychange', function() {
+    if (!document.hidden && !modalAutoShown) {
+        setTimeout(() => {
+            showBannerModal();
+            modalAutoShown = true;
+        }, 1000);
+    }
+});
+
+// Force show modal on any page interaction if not shown yet
+let interactionTimeout;
+function checkAndShowModal() {
+    if (!modalAutoShown) {
+        clearTimeout(interactionTimeout);
+        interactionTimeout = setTimeout(() => {
+            showBannerModal();
+            modalAutoShown = true;
+        }, 2000);
+    }
+}
+
+// Listen for user interactions
+document.addEventListener('scroll', checkAndShowModal, { once: true });
+document.addEventListener('click', checkAndShowModal, { once: true });
+document.addEventListener('touchstart', checkAndShowModal, { once: true });
+
+// Show persistent button if modal hasn't been opened
+function showPersistentButtonIfNeeded() {
+    const modal = document.getElementById('bannerModal');
+    const persistentBtn = document.getElementById('persistentBannerBtn');
+    
+    // Only show if modal is not currently open
+    if (modal && persistentBtn && !modal.classList.contains('show')) {
+        setTimeout(() => {
+            persistentBtn.classList.add('show');
+        }, 1000);
+    }
+}
+
+// Hide persistent button
+function hidePersistentButton() {
+    const persistentBtn = document.getElementById('persistentBannerBtn');
+    if (persistentBtn) {
+        persistentBtn.classList.remove('show');
+    }
+}
+
+// Show persistent button
+function showPersistentButton() {
+    const persistentBtn = document.getElementById('persistentBannerBtn');
+    if (persistentBtn) {
+        persistentBtn.classList.add('show');
+    }
+}
+
+// Global functions for HTML onclick handlers
+window.showBannerModal = showBannerModal;
+window.closeBannerModal = closeBannerModal;
+window.previousImage = previousImage;
+window.nextImage = nextImage;
+window.showPersistentButton = showPersistentButton;
+window.hidePersistentButton = hidePersistentButton;

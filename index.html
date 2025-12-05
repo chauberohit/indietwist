@@ -53,6 +53,34 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!-- Banner Image Modal -->
+    <div id="bannerModal" class="banner-modal">
+        <div class="modal-overlay" onclick="closeBannerModal()"></div>
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeBannerModal()">
+                <i class="fas fa-times"></i>
+            </button>
+            <button class="modal-nav modal-prev" onclick="previousImage()">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <button class="modal-nav modal-next" onclick="nextImage()">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+            <div class="modal-image-container">
+                <img id="modalImage" src="" alt="Banner Image" class="modal-image">
+            </div>
+            <div class="modal-counter">
+                <span id="imageCounter">1 / 2</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Persistent Banner Button -->
+    <div id="persistentBannerBtn" class="persistent-banner-btn" onclick="showBannerModal()">
+        <i class="fas fa-images"></i>
+        <span>View Banners</span>
+    </div>
+
     <!-- Loading Screen -->
     <div id="loading-screen" class="loading-screen">
         <div class="loading-content">
